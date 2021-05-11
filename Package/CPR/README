@@ -1,0 +1,233 @@
+#quickstart-
+step 1:
+	prepare a normalized dataframe
+step 2:
+	import ClusterPickRecommendationSystem as cpr
+step 3:
+	use cpr.quick(dataframe)
+	
+	or
+	
+	cpr.Run(decision_function, data_set, cluster_function, filter_function, max_epochs, cycles_per_epoch, target_array, n_clusters, minimum_cluster_size, maximum_cluster_size)
+	
+	decision_function: (function) from the module 'Decision' for user generated choices or 'Decision.SimBot' for simulated
+	
+	data_set: (dataframe) pre-prepared and integer only
+	
+	target_array: (array) size (len(dataframe.columns) x 1) used only in simulated Run
+	
+	cluster_function: (function) clustering function from sklearn.cluster
+	
+	filter_function: (str)
+		'hard' - Filter.hardFilterFunction
+		'nearest' - Filter.nearestFilterFunction
+	
+	max_epochs: (int) the maximum number of possible epochs
+	
+	cycles_per_epoch: (int) number of [cycles] of decisions in a [decision_function]
+	
+	n_clusters: (int) number of clusters the [data_set] is split into for the [decision_function]
+	
+	minimum_cluster_size: (int) smallest desired output for final cluster
+	
+	maximum_cluster_size: (int) largest desired output for final cluster
+
+The model for the default system used in cpr.quick:
+
+![Default Model](Default Model.jpg)
+
+#Module Tree:
+
+: #: not included in package
+
+ClusterPickRecommendationSystem
+	BaseExtra
+		#random
+		#numpy
+	Prep
+		DataPrepBase
+		LaptopPrep
+		#sklearn - preprocessing
+		#pandas
+	Filter
+		#sklearn.neighbors - NearestNeighbors
+	Decision
+		SimBot
+	Run
+		Filter
+	DeepRun
+		Run
+		#pandas
+		#progressbar
+	Diagnose
+		Graph
+		BaseExtra
+		#pandas
+	Graph
+		#matplotlib.pyplot
+		#numpy
+
+#Modules
+
+=====
+ClusterPickRecommendationSystem
+=====
+
+quick(data_set = dataframe, decision_function = Decision.SimpleAveragePick, cluster_function = KMeans, filter_function = 'nearest', max_epochs = 10, cycles_per_epoch = 10, n_clusters=2, minimum_cluster_size=10, maximum_cluster_size=40)
+
+	[data_set] - The normalized dataframe
+	[cluster_function] - The function, given a data_set, that returns n clusters
+	[decision function] - The function, given clusters and cycles, used to return a decision_vector
+	[filter_function] - The function, given a decision_vector and the filter, returns a dew data_set
+
+	returns a new data_set that theoretically contains the optimal item based off of a users taste
+
+
+=====
+BaseExtra
+=====
+
+randomvector(size, maximum)
+
+	returns a vector made up of random integers of length [size] of a maximum integer [maximum]
+
+testcheck(x, vset)
+	
+	returns whether a vector [x] is in a dataset [vset]
+
+closestvector(target, A)
+	
+	returns the vector in the set [A] that is closest to the target vector [A]
+
+farthestvector(target, A)
+
+	returns the vector in the set [A] that is farthest to the target vector [A]
+
+move(x, a, v)
+
+	returns a number of origin [x] towards a number [a] at a rate of [v]
+
+multimove(X, A, v)
+
+	returns a vector of origin [X] towards a vector [A] at a rate of [v]
+
+
+=====
+Prep
+=====
+this module is used to prepare dataframes before use
+
+scale(dataset)
+	
+	returns a normalized dataset where the individual columns are normalized from 0 to 1
+
+====
+Filter
+====
+this module takes a vector and filters the dataset accordingly
+
+hardFilterFunction(cluster_function, pick, data_set)
+	
+	returns a dataset made up of all and only the data in the cluster that the vector [pick] is in
+
+nearestFilterFunction(pick, data_set, cut = .50)
+	
+	returns the top (data_set length*cut) items closest to the the vector [pick] in the dataset
+
+====
+Decision
+====
+this module makes queries with the dataset to the user or simulation to return a decision vector
+
+SimpleAveragePick(sets, cycles)
+	
+	gives, for a number of cycles [cycles], choices from each set to pick between
+	
+	returns the average vector of the choices as a decision vector
+
+====
+SimBot
+====
+this module simulates decisions
+
+SimpleAveragePick(target, sets, cycles)
+	
+	for a number [cycles], the robot picks between n [sets]
+	
+	returns a decision_vector made up of the average of the picks
+	
+TriangleMove(target, sets, cycles)
+	
+	creates a start_vector made out of the average of the sets
+	for a number [cycles], the robot picks between n [sets], and moves the start_vector closer to the pick
+	
+	returns a decision_vector equal to the start_vector
+
+====
+Run
+====
+This module takes a set of parameters and an optional predefined [target_array]
+
+dataFilter(filter_function, pick, data_set, cluster_function = 0, cut = 0.50)
+	
+	returns a filter function matching the " " parameter
+
+clusterChoiceFiltering(decision_function, data_set, cluster_function, filter_function, max_epochs, cycles_per_epoch, target_array = 0, n_clusters=2, minimum_cluster_size=10, maximum_cluster_size=40)
+
+	[target_array] - predefined optimal item (option)
+	[data_set] - The normalized dataframe
+	[cluster_function] - The function, given a data_set, that returns n clusters
+	[decision function] - The function, given clusters and cycles, used to return a decision_vector
+	[filter_function] - The function, given a decision_vector and the filter, returns a dew data_set
+
+	returns a new data_set that theoretically contains the optimal item based off of a users taste
+	
+====
+DeepRun
+====
+
+clusterChoiceFiltering(decision_functions, data_set, cluster_function_list, filter_function_list, max_epochs, cycles_per_epoch_list, n_clusters_list, minimum_cluster_size=10, maximum_cluster_size=40,showprogress = True)
+	
+	takes lists of parameters and runs clusterChoiceFiltering with each item from a dataset as a [target_array]
+	
+	returns a dataframe, with a row for each combination of parameters and target_array 'Decision_Function', 'Cluster_Function', 'Filter', 'N_Clusters', 'Cycles', 'Item', 'Epochs', 'Cluster'
+
+====
+Diagnose
+====
+
+deepVitals(DeepFull)
+	
+	takes dataframe generated by DeepRun
+	
+	prints graphs showing distribution of Sucessful and Un-Sucessful tests according to epochs and cluster sizes
+	prints rate at which the final clusters have the target item included
+	
+	returns dataframe, a row for each trial 'Sucessful', 'Epochs', 'Cluster_Size'
+	
+====
+Graph
+====
+
+alternatespace(x, y)
+	
+	returns a numerated list of dimensions (x, y)
+
+multiclustgraph(dataset, size=50)
+
+	returns scatterplots comparing columns, and each columns distribution
+
+diagnosePlot(frame, columns)
+
+	prints graphs showing distribution of Sucessful and Un-Sucessful tests according to epochs and cluster sizes
+
+
+
+#To Do List:
+
+
+-For the [Run] module, make a function switch for other peices of modules the same way that Run.dataFilter is set up
+-Support categorical variables
+-Write clustering functions instead of relying on sklearn
+-Write tests for DeepRun that returns how close a test item is from the final decision_vector
+-Rewrite to make output cluster an exact size
